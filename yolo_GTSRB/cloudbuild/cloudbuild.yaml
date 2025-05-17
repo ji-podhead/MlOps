@@ -1,0 +1,32 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+    '-t',
+    '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/${_IMAGE_NAME}:${SHORT_SHA}',
+    '.'
+  ]
+  dir: 'cloudbuild'
+  id: 'build-docker-image'
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'push',
+    '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/${_IMAGE_NAME}:${SHORT_SHA}'
+  ]
+  id: 'push-docker-image'
+
+- name: '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/${_IMAGE_NAME}:${SHORT_SHA}'
+  args: [
+    '${_GCS_BUCKET_NAME}'
+  ]
+  id: 'download-and-upload-dataset'
+
+substitutions:
+  _REGION: 'us-central1' # Default region, can be overridden by trigger
+  _ARTIFACT_REGISTRY_REPO: 'mlops-460011-mlops-repo' # Replace with your Artifact Registry repo name
+  _IMAGE_NAME: 'dataset-downloader'
+  _GCS_BUCKET_NAME: 'mlops-460011-mlops-bucket' # Replace with your GCS bucket name
+
+images:
+- '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/${_IMAGE_NAME}:${SHORT_SHA}'
